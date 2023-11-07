@@ -45,7 +45,7 @@ SOx can react with other compounds in the atmosphere to form small particles. Th
 The purpose of this data exploration is for two reasons, we will first look to see if it is possible to accurately predict the response given the variables with regard to the bias- variance trade off. Which is shown in the equation below,
 
 <p align="center">
-<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='250' height='150'>
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='400' height='150'>
 </p>
 
 
