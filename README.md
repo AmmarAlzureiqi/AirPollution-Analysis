@@ -32,7 +32,7 @@ SO2 that is emitted in high concentrations into the air generally also lead to t
 This reaction occurs in the air and produces the gas sulfur trioxide which then allows for the following reaction to occur. Wikipedia*
 
 <p align="center">
-<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c1d70b68-2d52-45d0-b1f9-34b5da3d3ba0' width='250' height='150'>
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c1d70b68-2d52-45d0-b1f9-34b5da3d3ba0' width='400' height='150'>
 </p>
 
 
@@ -45,7 +45,7 @@ SOx can react with other compounds in the atmosphere to form small particles. Th
 The purpose of this data exploration is for two reasons, we will first look to see if it is possible to accurately predict the response given the variables with regard to the bias- variance trade off. Which is shown in the equation below,
 
 <p align="center">
-<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='550' height='150'>
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='650' height='150'>
 </p>
 
 
