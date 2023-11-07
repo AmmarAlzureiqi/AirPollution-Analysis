@@ -19,9 +19,13 @@ SO2 is the chemical formula for a molecule called Sulfur Dioxide. It is a toxic 
 </p>
 
 This study concerns the concentrations of Sulphur Dioxide in micrograms per cubic meter in the air. The reason for studying SO2 concentrations is because of the adverse implications on our health and the environment.
+
 Short-term exposures to SO2 can harm the human respiratory system and make breathing difficult. People with asthma, particularly children, are sensitive to the effects of SO2.
+
 SO2 that is emitted in high concentrations into the air generally also lead to the formation of other sulfur oxides (SOx). The following reaction is one of the ways in which sulfur dioxide can harm the environment.
+
 𝑆𝑂2 + 1 𝑂2 → 𝑆𝑂3 2
+
 This reaction occurs in the air and produces the gas sulfur trioxide which then allows for the following reaction to occur. Wikipedia*
 𝑆𝑂3(𝑔) +𝐻2𝑂(𝑙) →𝐻2𝑆𝑂4(𝑎𝑞)
 Where aq is an aqueous solution. This slow but sure process creates Sulfuric Acid in the air, which may lead to acid rain. This is an example of just one the ways Sulfur Dioxide can react in the air. https://www.epa.gov/so2-pollution*
