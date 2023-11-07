@@ -14,8 +14,9 @@ This data gives air pollution and related values for 41 U.S. cities and were col
 
 SO2 is the chemical formula for a molecule called Sulfur Dioxide. It is a toxic gas responsible for the smell of burnt matches. Wikipedia SO2*
 
+<p align="center">
 <img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/8ed7ead3-1351-4d68-8387-439edde01a73' width='150' height='200'>
-
+</p>
 
 This study concerns the concentrations of Sulphur Dioxide in micrograms per cubic meter in the air. The reason for studying SO2 concentrations is because of the adverse implications on our health and the environment.
 Short-term exposures to SO2 can harm the human respiratory system and make breathing difficult. People with asthma, particularly children, are sensitive to the effects of SO2.
