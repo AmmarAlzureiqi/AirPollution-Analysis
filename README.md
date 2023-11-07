@@ -29,16 +29,26 @@ SO2 that is emitted in high concentrations into the air generally also lead to t
 </p>
 
 
-𝑆𝑂2 + 1 𝑂2 → 𝑆𝑂3 2
-
 This reaction occurs in the air and produces the gas sulfur trioxide which then allows for the following reaction to occur. Wikipedia*
-𝑆𝑂3(𝑔) +𝐻2𝑂(𝑙) →𝐻2𝑆𝑂4(𝑎𝑞)
+
+<p align="center">
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c1d70b68-2d52-45d0-b1f9-34b5da3d3ba0' width='250' height='150'>
+</p>
+
+
 Where aq is an aqueous solution. This slow but sure process creates Sulfuric Acid in the air, which may lead to acid rain. This is an example of just one the ways Sulfur Dioxide can react in the air. https://www.epa.gov/so2-pollution*
+
 SOx can react with other compounds in the atmosphere to form small particles. These particles contribute to particulate matter (PM) pollution. Small particles may penetrate deeply into the lungs and in sufficient quantity can contribute to health problems. https://www.epa.gov/so2-pollution*
-   PAGE 2
-Purpose of Our Study
+
+<ins>Purpose of Our Study</ins>
+
 The purpose of this data exploration is for two reasons, we will first look to see if it is possible to accurately predict the response given the variables with regard to the bias- variance trade off. Which is shown in the equation below,
-'2''2
-𝐸(𝑦0 − 𝑓(𝑥0)) = 𝑉𝑎𝑟(𝑓(𝑥0)) + [𝐵𝑖𝑎𝑠(𝑓(𝑥0))] + 𝑉𝑎𝑟(𝜖)
+
+<p align="center">
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='250' height='150'>
+</p>
+
+
 This expected value is the Mean Squared Error calculated from the test data. Because we can overfit training data quite easily, our test MSE is most important to us. For every model we create we will show the training and test MSE’s and variance of the model.
+
 The next most important topic of study is what variables are most important to the response. For spatial analysis, we will consider whether spatial location is important to the response variable. For multiple linear regression, we will consider all of the variables and the 5 regions of the U.S.
