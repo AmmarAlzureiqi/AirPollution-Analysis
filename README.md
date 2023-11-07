@@ -24,6 +24,11 @@ Short-term exposures to SO2 can harm the human respiratory system and make breat
 
 SO2 that is emitted in high concentrations into the air generally also lead to the formation of other sulfur oxides (SOx). The following reaction is one of the ways in which sulfur dioxide can harm the environment.
 
+<p align="center">
+<img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/8396011a-c075-46e9-b1e9-8c2f7ffe6870' width='150' height='200'>
+</p>
+
+
 𝑆𝑂2 + 1 𝑂2 → 𝑆𝑂3 2
 
 This reaction occurs in the air and produces the gas sulfur trioxide which then allows for the following reaction to occur. Wikipedia*
