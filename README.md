@@ -7,6 +7,9 @@ SPATIAL AND REGRESSION ANALYSIS
 ## Data Description and Processing
 
 <u> The Study </u>
+
+<ins>The Study</ins>
+
 This data gives air pollution and related values for 41 U.S. cities and were collected from U.S. government publications. The data are means over the years 1969-1971.
 What is SO2?
 SO2 is the chemical formula for a molecule called Sulfur Dioxide. It is a toxic gas responsible for the smell of burnt matches. Wikipedia SO2*
