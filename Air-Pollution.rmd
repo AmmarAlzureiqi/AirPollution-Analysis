@@ -1,0 +1,997 @@
+---
+title: "Air Pollution, SS4864"
+author: "Ammar Alzureiqi, 250899830"
+date: "11/14/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First thing to be done is to set the workplace directory to wherever the modified air.dat is stored.
+
+```{r}
+
+getwd()
+
+setwd("/Users/ammaralzureiqi/Desktop/STATS/Data")
+
+data <- read.csv('air_data.csv')
+City <- data[seq(9, 329, by = 8)]
+SO2 <- as.numeric(data[seq(10, 330, by = 8)])
+Temp <- as.numeric(data[seq(11, 331, by = 8)])
+Man <- as.numeric(data[seq(12, 332, by = 8)])
+Pop <- as.numeric(data[seq(13, 333, by = 8)])
+Wind <- as.numeric(data[seq(14, 334, by = 8)])
+Rain <- as.numeric(data[seq(15, 335, by = 8)])
+RainDays <- as.numeric(data[seq(16, 336, by = 8)])
+air.data <- data.frame(City, SO2, Temp, Man, Pop, Wind, Rain, RainDays)
+
+```
+
+# Data Description
+
+These data give air pollution and related values for 41 U.S. cities and were collected from U.S. government publications. The data are means over the years 1969-1971.
+
+# What is SO2 ?
+
+$SO_2$ is the chemical formula for a molecule called Sulfur Dioxide. It is a toxic gas responsible for the smell of burnt matches. *Wikipedia SO2*
+
+Insert Lewis Dot structure of SO2
+
+This study concerns the concentrations of Sulphur Dioxide in micrograms per cubic meter in the air. The reason for studying $SO_2$ concentrations is because of the adverse implications on our health and the environment. 
+
+Short-term exposures to $SO_2$ can harm the human respiratory system and make breathing difficult. People with asthma, particularly children, are sensitive to these effects of $SO_2$.
+
+$S0_2$ emissions that lead to high concentrations of $SO_2$ in the air generally also lead to the formation of other sulfur oxides ($SO_x$). The reaction that occurs is the following.
+
+$$SO_2 + \frac{1}{2}~O_2 \to SO_3 $$
+
+This reaction occurs in the air and produces the gas Sulfur Trioxide which then allows for the following reaction to occur. *Wikipedia*
+
+$$SO_{3(g)} + H_2 O_{(l)} \to H_2 SO_{4(aq)} $$
+
+Where $aq$ is an aqueous solution. This slow but sure process creates Sulfuric Acid in the air. Which may lead to acid rain. This is an example of just one the ways Sulfur Dioxide can react in the air. *https://www.epa.gov/so2-pollution*
+
+$SO_x$ can react with other compounds in the atmosphere to form small particles. These particles contribute to particulate matter (PM) pollution. Small particles may penetrate deeply into the lungs and in sufficient quantity can contribute to health problems. *https://www.epa.gov/so2-pollution*
+
+Below is the number of Cities involved in this study and effects that were recorded that may have a relationship to the concentration of Sulfur Dioxide in the air.
+
+### Number of cases: 41
+
+### Variable Names: 
+
+City: the City documented in the experiment 
+SO2: Sulfur dioxide content of air in micrograms per cubic meter 
+Temp: Average annual temperature in degrees Fahrenheit 
+Man: Number of manufacturing enterprises employing 20 or more workers 
+Pop: Population size in thousands from the 1970 census 
+Wind: Average annual wind speed in miles per hour 
+Rain: Average annual precipitation in inches 
+RainDays: Average number of days with precipitation per year
+
+Instead of not using the City factor we will use National Geographics allocation of regions to place all 41 cities into 1 of 5 regions; the Northeast, Southwest, West, Southeast, and Midwest.
+
+```{r}
+
+air.data$City <- as.factor(c("SW", "SE", "W", "W", "NE", "NE", "W", "SE", "SE", "SE", "MW", "MW", "MW", "MW", "SE", "SE", "NE", "MW", "MW", "MW", "MW", "MW", "SW", "NE", "NE", "MW", "MW", "MW", "NE", "NE", "NE", "SE", "SE", "SW", "SW", "W", "SE", "SE", "W", "SE", "MW"))
+
+```
+
+# Initial Goals
+
+The purpose of this data exploration is for two reasons, we will first look to see if it is possible to accurately predict the response given the variables with regrad to the bias-variance trade off. Which is shown in the equation below,
+
+$$E(y_0 - \hat f(x_0))^2 =  Var(\hat f (x_0)) + [Bias(\hat f(x_0))]^2 + Var(\epsilon)$$
+
+Where $Bias(\hat f(x_0)) = (E[\hat f(x_0)] - y_0)$
+
+This is specifically the Mean Squared Error calculated for the test data. Because we can overfit training data quite easily, our test MSE is most important to us. For every model we create we will show the training and test MSE's and variance of the model.
+
+Once this is done we will interpret the relationships that we think have become most important to the response variable.
+
+# Preliminary Data Analysis/Data Exploration
+
+We should create training and testing datasets to be used for the whole study before we begin.
+
+```{r}
+
+set.seed(192835647)
+train.obs <- sample(1:41, 25)
+test.obs <- c(1:41)[-train.obs]
+train.data <- air.data[train.obs,]
+test.data <- air.data[test.obs,]
+
+```
+
+If we take a broad look at the relationships of all the variables, we can narrow it down to a select few that seem to be stronger than others.
+
+```{r}
+
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+
+plot(air.data)
+ggplot(gather(air.data[,-1]), aes(value)) + geom_histogram(bins = 10) + facet_wrap(~key, scales = 'free_x')
+
+```
+
+We see a linear relationship between Man and Pop, Temp and Rain, SO2 and Man, SO2 and Pop, SO2 and Wind, SO2 and Rain.
+
+```{r}
+
+p1 <- ggplot(air.data, aes(Man, Pop)) + geom_point() + geom_smooth() + ggtitle("Manufacturers vs. Population") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+p2 <- ggplot(air.data, aes(Temp, Rain)) + geom_point() + geom_smooth() + ggtitle("Avg. Temperature vs. Avg. Rain") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+p3 <- ggplot(air.data, aes(Man, SO2)) + geom_point() + geom_smooth() + ggtitle("SO2 vs. Manufacturers") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+p4 <- ggplot(air.data, aes(Pop, SO2)) + geom_point() + geom_smooth() + ggtitle("SO2 vs. Population") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+p5 <- ggplot(air.data, aes(SO2, Wind)) + geom_point() + geom_smooth() + ggtitle("SO2 vs. Avg. Wind") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+p6 <- ggplot(air.data, aes(x = City, y = Temp)) + stat_summary(fun.y = "mean", geom = "bar") + ggtitle("Region vs. Avg. Temperature ") + theme(plot.title = element_text(size = 8),axis.title.x = element_text(size = 8),axis.title.y = element_text(size = 8))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3, nrow = 2)
+
+```
+
+From this we see that the number of Manufacturers and Population are correlated and the two factors Average Temperature and Average Rain are correlated. We might want to consider what affect the correlation of factors may have on our linear assumption.
+
+We should also consider that Average Rain and Number of Rain Days will be correlated variables, we should only use one or the other. But lets create a correlation matrix to be sure that is all of the correlated predictors.
+
+```{r}
+
+round(cor(air.data[,-1]), 2)
+
+```
+
+The only worrying correlation is the predictors Man and Pop. We should remove one of them before starting, we will delete Pop, since Man has a better correlation with SO2.
+
+Now lets take a look at the response variable, $SO_2$
+
+```{r}
+
+ggplot(air.data, aes(x = SO2)) +  geom_histogram(aes(y = ..density..), colour = "black", fill = "green") + geom_density(alpha = .2, fill = "#FF6666") 
+
+```
+
+We see that our response variable is not normally distributed. We should consider testing if the response variable came from a normal distribution by the Shapiro-Wilks test and then perhaps by the Kolmogorov-Smirnov test.
+
+The null hypothesis of the Shapiro-Wilks and Kolmogorov-Smirnov test is that
+
+$$H_0: Population~is~Normally~Distributed $$
+
+```{r}
+
+shapiro.test(air.data$SO2)
+
+```
+
+
+# Spatial Analysis
+
+Before we begin this analysis, we should explain what it is we are assuming and then the type of analysis we will do. Spatial analysis is created from the Theory of Random Functions. This theory allows us to create an abstract and non-deterministic model of the stochastic process we are observing. For us, we are observing the concentrations of $SO_2$ in various geodesic coordinates in the United States. The possible values of this concentration are explained by the random variable $Z(s)$ where $s$ is the spatial coordinates of the measurement.
+
+```{r}
+
+library(sp)
+library(rgdal)
+library(raster)
+
+getClass("Spatial")
+
+Latitude <- c(33.448376, 34.746483, 37.773972, 39.742043, 41.763710, 34.225727, 38.900497, 30.332184, 25.761681, 33.753746, 41.881832, 39.791000, 41.619549, 37.697948, 38.328732, 29.951065, 39.299236, 42.331429, 44.954445, 39.099724, 38.627003, 41.257160, 35.106766, 42.652580, 42.880230, 39.103119, 41.505493, 39.983334, 39.952583, 40.440624, 41.825226, 35.117500, 36.174465, 32.779167, 29.749907, 40.758701, 36.850769, 37.541290, 47.608013, 32.776566, 43.038902)
+Longitude <- c(-112.074036, -92.289597, -122.431297, -104.991531, -72.685097, -77.944710, -77.007507, -81.655647, -80.191788, -84.386330, -87.623177, -86.148003, -93.598022, -97.314835, -85.764771, -90.071533, -76.609383, -83.045753, -93.091301, -94.578331, -90.199402, -95.995102, -106.629181, -73.756233, -78.878738, -84.512016, -81.681290, -82.983330, -75.165222, -79.995888, -71.418884, -89.971107, -86.767960, -96.808891, -95.358421, -111.876183, -76.285873, -77.434769, -122.335167, -79.930923, -87.906471)
+
+air.data$Longitude <- Longitude
+air.data$Latitude <- Latitude
+
+coordmat <- cbind(Longitude, Latitude)
+pts <- SpatialPoints(coordmat)
+llCRS <- CRS("+proj=longlat +datum=WGS84")
+pts <- SpatialPoints(coordmat, proj4string = llCRS)
+df <- data.frame(id = 1:41,  SO2 = SO2)
+spdf <- SpatialPointsDataFrame(pts, data = df)
+
+```
+
+We have changed the dataframe spdf into a spatial data dataframe so that we can perform special procedures. Inside the CRS() function is the setting to treat the data given as Geographic coordinate system.
+
+*https://rspatial.org/raster/spatial/index.html*
+
+```{r}
+
+plot(spdf)
+
+```
+
+```{r}
+library(maps)
+library(gstat)
+library(MAP)
+library(ggplot2)
+usa <- map_data("state")
+ggplot() + geom_path(data = usa, aes(x = long, y = lat, group = group)) + geom_point(data = air.data, aes(x = Longitude, y = Latitude, size = SO2), color = "red") 
+
+```
+
+We see that we have successfully transformed the data and we now see a trend in the value of $SO_2$ concentration in the US.
+
+```{r}
+
+xyplot(SO2 ~ City, as.data.frame(spdf))
+
+```
+
+This relationship corresponds directly with our plot. The MidWest is not in the west but just west of the North East. The two beside each other are composed of the largest concentrations of $SO_2$.
+
+### Variograms
+
+We are next going to look for a type of correlation in spatial data. In standard statistics we could use a scatterplot to determine what variables are correlated. But in spatial data we have to use what is called a variogram.
+But before we do this, we should outline some underlying theory to what we are seeing. First, we assume the process ($SO_2$ concentrations) is modeled by a random function $Z(s)$ that has two components. This model implies that the process is stationary. We consider a process to be stationary if it's variance is constant independent of spatial location.
+
+$$Z(s) = m + e(s)$$
+$$E[Z(s)] = m,~~Residual=e(s)$$
+
+A process is intrinsically stationary if the equation below is true.
+
+$$E[Z(s) - Z(s+h)] = 0$$
+
+Where $h$ is our lag, which is any spatial difference that is within the set of possible values that $Z(s)$ can take on.
+This means that the semivariance of the process is reduced to the $\gamma$ below. This is our variogram equation.
+
+$$Var[Z(s) - Z(s+h)]=E[(Z(s) - Z(s+h))^2] = 2\gamma(h) $$
+$$\implies \gamma(h) = \frac{1}{2}E(Z(s) - Z(s+h))^2$$
+
+Before we plot the variogram, we first consider transforming our $SO_2$ variable.
+
+We decide to log the $SO_2$ variable because of large skewness.
+
+```{r}
+
+library(psych)
+describe(SO2)
+describe(log(SO2))
+
+```
+
+We also check the outliers because variograms can be greatly affected by any outliers, no matter how small the sample is.
+
+```{r}
+
+boxplot(SO2, main = "SO2 Concentration")
+
+```
+
+We see that there are three outliers, but our data is too small to omit 7% of our data.
+
+```{r}
+
+boxplot(log(SO2), main = "log(SO2) Concentration")
+
+```
+
+We see that after a log transformation, our data no longer has any outliers, this is also an encouraging reason for us to continue using the log transformation.
+
+```{r}
+
+#hscat(log(SO2) ~ 1, spdf, (0:9)*100)
+#hscat(SO2 ~ 1, spdf, (0:9)*100)
+
+```
+
+After looking at the lag differences, $h$ represents the lag, we see that we must use a log() transformation.
+
+The variogram beneath plots all possible $[Z(s_i)-Z(s_j)]^2$ values against the distance, h_{ij}, given from the data given.
+
+```{r}
+
+library(kableExtra)
+
+plot(variogram(SO2 ~ 1, spdf, cloud = TRUE))
+plot(variogram(log(SO2) ~ 1, spdf, cloud = TRUE))
+v <- variogram(log(SO2) ~ 1, spdf, cloud = TRUE)
+df <- data.frame(np = v[1:10,1], AvgDist = v[1:10,2], Est = v[1:10, 3])
+kable(df, "simple")
+
+```
+
+The table produced shows the number of comparisons $(Z(s) - Z(s + h))^2$, np, that were made to estimate $\hat\gamma(h)$, Est, where the average $h$ was AvgDist. We see that there is an incredible amount of comparisons made for every distance, except the first two semivariance estimates. This occurs because the data is a) small and b) is irregularly spaced.
+
+The drastic difference in log transformed data leads us to use the log($SO_2$). There is no possible way we could have used semivariance estimates of 1000 to 5000.
+
+##### Variogram Fit
+
+What we are going to try to do now is model the semivariances. ie: give $\gamma(h)$ and parametric equation. The key to variogram modeling is to capture the spatial correlation that initially takes place at a certain lag bewteen observations. What we are implying in that sentence is that all observations are correlated to the ones that surround it up to a certain dsitance, anywhere past that distance and the observations become independent. We should be able to find a parametric model that corresponds to that initial spatial correlation.
+
+To begin with, we need to consider what cutoff would be most beneficial to the variogram. A look at the Average Distances considered in the previously shown table means that generally anywhere above 1500 to 2000 would likely be distances too large to look at.
+
+```{r}
+
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 1000)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 2000)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 3000)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 4000)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 5000)
+plot(exp.var1)
+
+```
+
+We see that cutoffs of 2000 and 3000 give reasonable patterns, we will look at Lag intervals for the bins of the estimates to be made.
+
+```{r}
+
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 1000, width = 50)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 1000, width = 75)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 1000, width = 100)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 1000, width = 125)
+plot(exp.var1)
+
+```
+
+We see that when the cutoff is 1000 that our bin intervals do not seem to create much of anything.
+
+```{r}
+
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 2000, width = 50)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 2000, width = 100)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 2000, width = 150)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 2000, width = 200)
+plot(exp.var1)
+
+```
+
+The cutoff of 2000 is encouraging, showing that no matter the bin interval, the same pattern will appear.
+
+```{r}
+
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 4500, width = 200)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 4500, width = 250)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 4500, width = 300)
+plot(exp.var1)
+exp.var1 <- variogram(log(SO2) ~ 1, spdf, cutoff = 4500, width = 350)
+plot(exp.var1)
+
+```
+
+For a cutoff of 3000 we see that different bin intervals do not alter the pattern much.
+
+We need to consider that a cutoff of 2000 is too soon and does not consider the last bit of the spatial autocorrelation. Although a cutoff of 2000 gives a nice shape, we will have to use a cutoff of 3000 with bins of 200.
+
+```{r}
+
+v.experi <- variogram(log(SO2) ~ 1, spdf, cutoff = 4500, width = 350)
+plot(v.experi)
+
+```
+
+```{r}
+
+show.vgms()
+
+```
+
+
+```{r}
+
+v.fita <- vgm(0.6, "Exp", 1500, 0.15)
+v.fitb <- vgm(0.5, "Exp", 1500, 0.2)
+v.fitc <- vgm(0.5, "Sph", 2000, 0.1)
+v.fitd <- vgm(0.35, "Gau", 1200, 0.24)
+plot(v.experi, v.fita, main = "Exponential")
+plot(v.experi, v.fitb, main = "Exponential")
+plot(v.experi, v.fitc, main = "Spherical")
+plot(v.experi, v.fitd, main = "Gaussian")
+
+```
+
+We see that it by visual fit we would go with the Exponential.
+Below we cannot even fit a Gaussian model because of no convergence. We see that the first three models are very close. We also try an auto variogram fit that gives a completely different fit from what we were visually fitting. This parametric model brings us in a completely different direction and we will keep it to compare to the other ones.
+
+```{r}
+
+fit1 <- fit.variogram(v.experi, v.fita)
+fit2 <- fit.variogram(v.experi, v.fitb)
+fit3 <- fit.variogram(v.experi, v.fitc)
+fit4 <- fit.variogram(v.experi, v.fitd)
+
+attr(fit1, "SSErr")
+attr(fit2, "SSErr")
+attr(fit3, "SSErr")
+attr(fit4, "SSErr")
+
+```
+
+The best fit is the Spherical model which has a total of four parameters. The next best fit is the Exponential model, which also has four parameters. So by using the Sphereical model, there is no burden of extra parameters, it is just a better model than the Exponential.
+
+```{r}
+
+kable(fit3, "simple")
+
+kable(fit4, "simple")
+
+```
+
+```{r}
+
+fitted.fit1 <- fit.variogram(v.experi, vgm(psill = 0.4917201, model = "Sph", range = 2684.134, nugget = 	0.1835652, kappa = 0.5))
+plot(v.experi, fitted.fit1, main = "Second Best Fit")
+
+fitted.fit2 <- fit.variogram(v.experi, vgm(psill = 0.4356466, model = "Gau", range = 1257.821, nugget = 0.2412378, kappa = 0.5))
+plot(v.experi, fitted.fit2, main = "Best Fit")
+
+```
+
+##### Kriging
+
+An accurate and short definition of kriging is given in the quote below.
+
+"Kriging predicts values at unvisited sites from sparse sample data based on a stochastic model of continuous spatial variation. It does so by taking into account knowledge of the spatial variation as represented in the variogram or covariance function."*
+
+Basic Steps in Geostatistics: The Variogram and Kriging, Springer*
+
+This is the reason for why we have gone into detail on the variogram. But now we need to create a grid for the Spatial dataframe that we have.
+
+```{r}
+
+library(geoR)
+Cols <- seq(from = -125, to = -70, by = 2)
+Rows <- seq(from = 25, to = 50, by = 2)
+air.grid <- expand.grid(x = Cols, y = Rows)
+air.grid <- SpatialPoints(air.grid, proj4string = llCRS)
+gridded(air.grid) <- TRUE
+plot(air.grid)
+points(spdf, col = "red")
+title("Interpolation Grid and Sample Points")
+
+```
+
+Using a prediction grid of this size will give us 60 predictions, which is around the amount of data we have.
+
+```{r}
+
+ordinary.krig <- krige(log(SO2) ~ 1, spdf, air.grid, model = fitted.fit2)
+spplot(ordinary.krig)
+
+cv.krig <- krige.cv(log(SO2) ~ 1, spdf, fitted.fit1, nmax = 40, nfold=5)
+bubble(cv.krig, "residual", main = "log(SO2): 5-fold CV residuals")
+
+mean(cv.krig$residual^2)
+
+```
+
+```{r}
+
+ord.krig <- krige(log(SO2) ~ 1, spdf, air.grid, model = fitted.fit1)
+spplot(ord.krig)
+
+cv.krig1 <- krige.cv(log(SO2) ~ 1, spdf,fitted.fit2, nmax = 40, nfold=5)
+bubble(cv.krig1, "residual", main = "log(SO2): 5-fold CV residuals")
+
+mean(cv.krig1$residual^2)
+
+
+```
+
+For both cross-validation values of both models we see that the residuals are centered around zero which means that they are both good fits. We do not see obvious trends either.
+
+
+Lets consider the Guass-Markov assumptions that must be met by looking at the residuals, where we will create a linear model that includes all of the factors.
+
+# Linear Model (Residual Analysis)
+
+```{r}
+
+linear.model <- lm(SO2 ~ City + Temp + Man + Wind + Rain + RainDays, data = train.data)
+summary(linear.model)
+
+trainMSE <- mean(linear.model$residuals^2)
+testMSE <- mean((test.data$SO2 - predict(linear.model, newdata = test.data))^2)
+
+trainMSE
+testMSE
+
+```
+
+We see that the $R^2$ and $adj~R^2$ is adequate for a linear model. We will remove all the variables except Man, Wind, and City.
+
+```{r}
+
+linear.model1 <- lm(SO2 ~ City + Man + Wind, data = train.data)
+summary(linear.model1)
+
+```
+
+```{r}
+
+trainMSE1 <- mean(linear.model1$residuals^2)
+testMSE1 <- mean((test.data$SO2 - predict(linear.model1, newdata = test.data))^2)
+
+trainMSE1
+testMSE1
+
+```
+
+This is not a very good fit, we seem to have overfit something that cannot accurately predict on new data. We should consider testing a new training and test dataset to be sure that this was not just a fluke.
+
+```{r}
+
+set.seed(123456)
+train.obs1 <- sample(1:41, 25)
+test.obs1 <- c(1:41)[-train.obs1]
+train.data1 <- air.data[train.obs1,]
+test.data1 <- air.data[test.obs1,]
+
+```
+
+```{r}
+
+linear.model2 <- lm(SO2 ~ City + Man + Wind, data = train.data1)
+trainMSE1f <- mean(linear.model2$residuals^2)
+testMSE1f <- mean((test.data1$SO2 - predict(linear.model2, newdata = test.data1))^2)
+trainMSE1f
+testMSE1f
+
+```
+
+It was not a fluke, we see that although the test MSE has dropped, the training MSE has risen. This is good to see that our model does actually perform well.
+
+Considering that the model that used all the variables did do better than the reduced model, lets see if it also had an overfitting issue or if it was actually predicting better.
+
+```{r}
+
+linear.model3 <- lm(SO2 ~ City + Temp + Man + Wind + Rain + RainDays, data = train.data1)
+trainMSEf <- mean(linear.model3$residuals^2)
+testMSEf <- mean((test.data1$SO2 - predict(linear.model3, newdata = test.data1))^2)
+trainMSEf
+testMSEf
+
+```
+
+This is in accordance to the bias variance tradeoff. As we add more variables, the bias will monotonically decrease but the opposite occurs for the variance of the model. The model with the larger amount of predictors will normally overfit the reduced model.
+
+$$H_0 : Temp,~Rain,~and~RainDays~have~coefficients~of~zero$$
+
+```{r}
+
+anova(linear.model, linear.model1)
+
+```
+
+The nested model is justified by the anova test.
+
+```{r}
+
+plot(linear.model1, which = 1)
+plot(linear.model1, which = 2)
+
+```
+
+The residuals are centered around zero but our variance does not seem to remain constant but actually disperses as the fitted values grow. Our constant variance (homoscedasticity assumption) may be violated. But we should also take into account that our normality assumption is without a doubt satisfied.
+
+```{r}
+
+plot(1:25, residuals(linear.model1), xlab = "Index", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+```
+
+The normailty and independence of the residuals seems to be satisfied as well, indicating that a linear model could be a good fit for the response.
+
+```{r}
+
+library(car)
+
+vif(linear.model1)
+
+```
+
+From our variance inflation factors we see that we do not have correlated factors and that we dealt with them appropriately at the beginning.
+
+$$H_0:Residual~Variance~is~Homoscedastic$$
+
+```{r}
+
+library(lmtest)
+
+bptest(linear.model1)
+
+```
+
+Our test of constant variance does not have sufficient evidence to reject the null hypothesis.
+
+The residual vs. fitted plot seems to have a little bit of a pattern. Might be nothing to worry about, but lets check that the points 30 and 25 are outliers. If they are not outliers than because of our small sample size, we may not be able to exclude them.
+
+```{r}
+
+hatvalues(linear.model1)
+
+hatvalues(linear.model1) > 3*mean((hatvalues(linear.model1)))
+
+```
+
+We see that from the diagonals of the hat matrix, we do not have any high influence points. Specifically points 30 and 25 are not very close to the highest influence.
+
+Next we will check the standardized residuals to see if any points can be classified as any outlier. We can find the values through a function referenced in the textbook for this class.
+
+```{r}
+
+library(MASS)
+
+stdres(linear.model1)
+stdres(linear.model1) > 3
+
+```
+
+We see that none of the points get near the general cutoff.
+
+Now lets look look to see how much our fitted values would change if we were to remove the $i^{th}$ observation. ie: the Cook's Distance.
+
+```{r}
+
+cooks.distance(linear.model1) > 1
+cooks.distance(linear.model1) > 0.5
+
+```
+
+The general cutoff for a point that is absolutely influential is 1 and none of the points exceed 1. We see that point 25 meets the cutoff to be considered.
+
+After our residual analysis we should be wary of point 25 because of it's influential properties on the model. But we must be aware of how small the sample size is. Can we afford to just remove a point that is potentially part of a larger population that we do not see? Our analysis suggests nothing out of the ordinary except an arbitrary outlier test that is relative to the other points. We should delve deeper into this to truly understand what should be done about these potential outliers.
+
+# Checking the Outliers
+
+#### Model Transformations
+
+We will use the Box-Cox method to see if we can produce even better results.
+The Box-Cox method used in the textbook before was different then the one used in R. Using textbook *Regression: Linear Models in Statistics (Springer Undergraduate Mathematics Series)* we found a similar model to the function used in R.
+
+$$y^{(\lambda)} = \frac{y^{\lambda} -1}{\lambda}$$ if $\lambda \ne 0$
+$$y^{(\lambda)} = ln(y)$$ if $\lamda = 0$
+
+This lambda is found by minimizing the Sum of Residuals values with respect to the lambda value used in the model. We will plot this out.
+
+```{r}
+
+library(MASS)
+
+boxcox(linear.model1, lambda = seq(-3, 3, by = 0.1))
+
+```
+
+We see that $\lambda$ = 0 is the best transformations to choose.
+
+```{r}
+
+linear.model.log <- lm(log(SO2) ~ City + Man + Wind, data = train.data)
+plot(linear.model.log, which = 1)
+summary(linear.model.log)
+
+```
+
+We see that the log root transformation is more desirable than the square root transformation in the residuals vs. fitted values and the p-value created when testing the models significance.
+
+Lets assess the accuracy of the newly transformed model.
+
+$$log(Y) = \beta_0 + \beta_{City}X_1 + \beta_{Man}X_{2} + \beta_{Wind}X_3$$
+
+```{r}
+
+trainMSE3 <- mean((train.data$SO2 - exp(predict(linear.model.log)))^2)
+trainMSE3
+testMSE3 <- mean((test.data$SO2 - exp(predict(linear.model.log, newdata = test.data)))^2)
+testMSE3
+
+```
+
+```{r}
+
+linear.model.logf <- lm(log(SO2) ~ City + Man + Wind, data = train.data1)
+trainMSE3f <- mean((train.data1$SO2 - exp(predict(linear.model.logf)))^2)
+testMSE3f <- mean((test.data1$SO2 - exp(predict(linear.model.logf, newdata = test.data1)))^2)
+
+```
+
+It is becoming clear that we do not have enough data to create a good fitting model.
+
+#### Forward and Backward Selection Model
+
+Lets go back to the linear regression models, with no transformation to the response, and consider forward and backwards variable selection to see if we stepped over something that was worth looking at.
+
+```{r}
+
+library(leaps)
+
+back.models <- regsubsets(SO2 ~., data = train.data, nvmax = 5, method = "backward")
+summary(back.models)
+plot(back.models, scale = "adjr2", main = "Adjusted R^2")
+
+```
+
+According the $R^2_{adj}$ value, the best model had City, Temp, Pop, Wind, and Rain.
+
+```{r}
+
+forward.models <- regsubsets(SO2 ~., data = train.data, nvmax = 5, method = "forward")
+summary(forward.models)
+plot(forward.models, scale = "adjr2", main = "Adjusted R^2")
+
+```
+
+Surprisingly, we receieve the same output from a forward selection of parameters. Lets use this model to see whether it has a quality of fit worth pursuing.
+
+```{r}
+
+select.model <- lm(SO2 ~ City + Temp + Pop + Wind + Rain, data = train.data)
+summary(select.model)
+
+```
+
+It seems that Rain is not significant, lets perform a nested model test to see whether we can remove it from the model.
+
+```{r}
+
+select.model1 <- lm(SO2 ~ City + Temp + Pop + Wind, data = train.data)
+summary(select.model1)
+
+anova(select.model, select.model1)
+
+```
+
+Now Temp is insignificant.
+
+```{r}
+
+select.model2 <- lm(SO2 ~ City + Pop + Wind, data = train.data)
+summary(select.model2)
+
+anova(select.model1, select.model2)
+
+```
+
+We have lost our best $R^2_{adj}$ but have converged on a model that only uses significant predictors.
+
+First we will look at the forward and backward selections best model according to $R^2_{adj}$.
+
+```{r}
+
+trainMSE4 <- mean(select.model$residuals^2)
+trainMSE4
+testMSE4 <- mean((test.data$SO2 - predict(select.model, newdata = test.data))^2)
+testMSE4
+
+trainMSE5 <- mean(select.model2$residuals^2)
+trainMSE5
+testMSE5 <- mean((test.data$SO2 - predict(select.model2, newdata = test.data))^2)
+testMSE5
+
+```
+
+This training mean squared error is quite low but the test mse has risen from our original multiple linear regression model. But this is another good reason to believe that Wind is an important factor to this process. Lets consider the second training and test datasets we have created so that we can compare again.
+
+```{r}
+
+select.modelf <- lm(SO2 ~ City + Temp + Pop + Wind + Rain, data = train.data1)
+select.model2f <- lm(SO2 ~ City + Pop + Wind, data = train.data1)
+
+trainMSE4f <- mean(select.modelf$residuals^2)
+testMSE4f <- mean((test.data1$SO2 - predict(select.modelf, newdata = test.data1))^2)
+
+trainMSE5f <- mean(select.model2f$residuals^2)
+testMSE5f <- mean((test.data1$SO2 - predict(select.model2f, newdata = test.data1))^2)
+
+```
+
+Both test MSE's dropped and their training MSE's rose. Though neither are close the original reduced linear model that we have created.
+
+#### Polynomial Regression
+
+We will continue to use the selected model
+
+```{r}
+
+poly.model <- lm(SO2 ~ City + Man + poly(Wind, 2), data = train.data)
+summary(poly.model)
+
+```
+
+This model works surprisingly well. Once again we have shown that wind is certainly an essential part of this process and that it can contribute on a quadratic.
+
+```{r}
+
+trainMSE6 <- mean(poly.model$residuals^2)
+trainMSE6
+testMSE6 <- mean((test.data$SO2 - predict(poly.model, newdata = test.data))^2)
+testMSE6
+
+```
+
+```{r}
+
+poly.modelf <- lm(SO2 ~ City + Man + poly(Wind, 2), data = train.data1)
+trainMSE6f <- mean(poly.modelf$residuals^2)
+testMSE6f <- mean((test.data1$SO2 - predict(poly.modelf, newdata = test.data1))^2)
+
+```
+
+The second training and test data rival that of the reduced model that we have considered our best model. Lets have a quick look at the assumptions for this model.
+
+```{r}
+
+plot(poly.model)
+
+```
+
+Unfortunately the assumptions seem to worse than the original linear model we proposed.
+
+# Unsupervised Learning, K-Nearest Neighbours
+
+We should create a nonparametric approach to the data we have. We are doing this simply to see if our model is close to the unsupervised approach. The main objective to this dataset is to interpret the process at hand. That is, what affects the concentration of $SO_2$. We will end up using a parametric model of sorts but we should consider what type of prediction accuracy we are sacrificing for a model that be properly interpreted. For instance, if this model can grealy outperform the parametric model, then we may be at a disadvantage by trying to interpret the process parametrically.
+
+To begin with, we will show the formula for KNN Regression.
+
+$$\hat{f}(x_0) = \frac{1}{K}\sum_{x_i \in \mathcal{N}_0}y_i $$
+
+This equation says that for a given value $K$ and prediction point $x_0$ the predicted response will be the average of the $K$ closest values to $y_0$. This distance is considered to be Euclidean distance (the distance of all the predictors closest), so if there are too many predictors being used, this type of regression can ruin itself through the curse of dimensionality. So we will only use this with the predictors that we have found to be significant thus far.
+
+```{r}
+
+library(FNN)
+
+train.x <- cbind(train.data[,c(3, 5, 6)])
+test.x <- cbind(test.data[,c(3, 5, 6)])
+train.SO2 <- train.data$SO2
+
+nonp.model1 <- knn.reg(train.x, test.x, train.SO2, k = 1)
+nonp.model2 <- knn.reg(train.x, test.x, train.SO2, k = 2)
+nonp.model3 <- knn.reg(train.x, test.x, train.SO2, k = 3)
+nonp.model4 <- knn.reg(train.x, test.x, train.SO2, k = 4)
+nonp.model5 <- knn.reg(train.x, test.x, train.SO2, k = 5)
+nonp.model6 <- knn.reg(train.x, test.x, train.SO2, k = 6)
+nonp.model7 <- knn.reg(train.x, test.x, train.SO2, k = 7)
+
+MSEs <- c(mean((test.data$SO2 - nonp.model1$pred)^2), mean((test.data$SO2 - nonp.model2$pred)^2), mean((test.data$SO2 - nonp.model3$pred)^2), mean((test.data$SO2 - nonp.model4$pred)^2), mean((test.data$SO2 - nonp.model5$pred)^2), mean((test.data$SO2 - nonp.model6$pred)^2), mean((test.data$SO2 - nonp.model7$pred)^2))
+
+plot(1:7, MSEs)
+plot(test.data$SO2, nonp.model2$pred, xlab = "y", ylab = expression(hat(y)), main = "k = 2")
+
+testMSE7 <- MSEs[2]
+testMSE7
+
+```
+
+```{r}
+
+train.xf <- cbind(train.data1[,c(3, 5, 6)])
+test.xf <- cbind(test.data1[,c(3, 5, 6)])
+train.SO2f <- train.data1$SO2
+nonp.model2f <- knn.reg(train.xf, test.xf, train.SO2f, k = 2)
+testMSE7f <- mean((test.data1$SO2 - nonp.model2f$pred)^2)
+
+```
+
+
+We see that our best test MSE comes from the k = 2 closest neighbours. But that it does not give a better test MSE than our parametric model. This is encouraging news to continue interpretation of the model through parametric approach.
+
+What we would typically like to see in the $\hat{f}(x_0)~~vs.~~f(x_0)$ is a linear relationship. At best this occurs for k = 2.
+
+#### Combination of Best Fits
+
+```{r}
+
+linear.modelr <- lm(log(SO2) ~ City + Man + poly(Wind, 2), data = train.data)
+summary(linear.modelr)
+
+trainMSEr <- mean((train.data$SO2 - exp(predict(linear.modelr)))^2)
+trainMSEr
+testMSEr <- mean((test.data$SO2 - exp(predict(linear.modelr, newdata = test.data)))^2)
+testMSEr
+
+linear.modelrf <- lm(log(SO2) ~ City + Man + poly(Wind, 2), data = train.data1)
+summary(linear.modelrf)
+
+trainMSErf <- mean((train.data1$SO2 - exp(predict(linear.modelrf)))^2)
+testMSErf <- mean((test.data1$SO2 - exp(predict(linear.modelrf, newdata = test.data1)))^2)
+
+plot(linear.modelr)
+
+```
+
+#### Summary of MSE's and Variance
+
+```{r}
+
+library(kableExtra)
+Model <- c("All Variables", "City, Man, Wind", "log(y) ~ City, Man, Wind", "F&B Selection: City, Temp, Pop, Wind", "F&B Selection: City, Pop, Wind", "Poly: City, Man, Wind^2", "KNN, k = 2", "log(y) ~ City, Man, Wind^2t")
+trainMSEs <- c(trainMSE, trainMSE1, trainMSE3, trainMSE4, trainMSE5, trainMSE6, NA, trainMSEr)
+testMSEs <- c(testMSE, testMSE1, testMSE3, testMSE4, testMSE5, testMSE6, testMSE7, testMSEr)
+trainMSEfs <- c(trainMSEf, trainMSE1f, trainMSE3f, trainMSE4f, trainMSE5f, trainMSE6f, NA, trainMSErf)
+testMSEfs <- c(testMSEf, testMSE1f, testMSE3f, testMSE4f, testMSE5f, testMSE6f, testMSE7f, testMSErf)
+summarize <- data.frame(Model, trainMSEs, testMSEs, "Second Train MSE" = trainMSEfs, "Second Test MSE" = testMSEfs)
+kable(summarize, "simple")
+
+```
+
+
+# Bootstrap Methods
+
+We will try two bootstrap methods, the first will be a resampling of the residuals, where we fit all the data we have. We have the original fitted model below,
+
+$$y_i = x_i \hat\beta + e_i$$
+
+Then we will resample the $e_i$'s to make,
+
+$$y_i = x_i \hat\beta + e_i^*$$
+
+```{r}
+
+model <- lm(SO2 ~., data = train.data)
+summary(model)
+model1 <- lm(SO2 ~ City + Temp + Pop + Wind, data = train.data)
+summary(model1)
+anova(model, model1)
+
+air.fun <- function(fitted, resids){
+  yi <- fitted
+  yi.new <- yi - resids
+  boot.resids <- sample(resids, length(resids), replace = TRUE)
+  yi.new <- yi.new + boot.resids
+  return(yi.new)
+}
+
+boot.coefs <- as.matrix(replicate(1000, summary(lm(SO2 ~ City + Temp + Pop + Wind, data = data.frame(SO2 = air.fun(model1$fitted.values, model1$residuals), train.data[,-2])))$coefficients[,1]))
+
+par(mfrow = c(3,4))
+hist(boot.coefs[1,])
+hist(boot.coefs[2,])
+hist(boot.coefs[3,])
+hist(boot.coefs[4,])
+hist(boot.coefs[5,])
+hist(boot.coefs[6,])
+hist(boot.coefs[7,])
+
+Boot.ests <- apply(boot.coefs, 1, mean)
+Boot.ests
+boot.ses <- apply(boot.coefs, 1, var)
+sqrt(boot.ses)
+
+model1$coefficients
+
+```
+
+We see that this is a relatively effective way to bootstrap. We will attempt to use these bootstrap values to dive further into better fitting models. Lets consider the models
+
+```{r}
+
+
+
+```
+
+The other bootstrap technique is to simply resample the pairs of observations $(y_i, \boldsymbol{x}_i)$, which can then be used to find a better fitting model.
+
+```{r}
+
+set.seed(34)
+idx <- sample(1:length(train.data$SO2), 300, replace = T)
+boot.sample <- train.data[idx,]
+
+boot.model <- lm(SO2 ~., data = boot.sample)
+summary(boot.model)
+
+
+
+```
+
+
+
+
+
