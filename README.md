@@ -48,6 +48,7 @@ The purpose of this data exploration is for two reasons, we will first look to s
 <img src='https://github.com/AmmarAlzureiqi/AirPollution-Analysis/assets/100096699/c9bb5889-9ccd-4e41-8d5c-65a1473b1b57' width='650' height='150'>
 </p>
 
+## Full Report in PDF
 
 This expected value is the Mean Squared Error calculated from the test data. Because we can overfit training data quite easily, our test MSE is most important to us. For every model we create we will show the training and test MSE’s and variance of the model.
 
